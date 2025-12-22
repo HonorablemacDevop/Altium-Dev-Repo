@@ -13,9 +13,9 @@ resource "random_password" "db" {
 }
 
 resource "aws_secretsmanager_secret" "db" {
-  name                    = "${var.altium_dev}/db/mysql"
+  name                    = "${var.name_prefix}/db/mysql"
   recovery_window_in_days = 0
-  tags                    = merge(var.tags, { Name = "${var.altium_dev}-db-secret" })
+  tags                    = merge(var.tags, { Name = "${var.name_prefix}-db-secret" })
 }
 
 resource "aws_secretsmanager_secret_version" "db" {
@@ -27,10 +27,10 @@ resource "aws_secretsmanager_secret_version" "db" {
 }
 
 resource "aws_security_group" "db_sg" {
-  name        = "${var.altium_dev}-db-sg"
+  name        = "${var.name_prefix}-db-sg"
   description = "DB SG: MySQL from app SG, SSH optional"
   vpc_id      = var.vpc_id
-  tags        = merge(var.tags, { Name = "${var.altium_dev}-db-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-db-sg" })
 }
 
 resource "aws_security_group_rule" "db_in_mysql" {
@@ -65,7 +65,27 @@ resource "aws_instance" "db" {
   subnet_id                   = var.private_subnet_id
   vpc_security_group_ids      = [aws_security_group.db_sg.id]
   associate_public_ip_address = true # default VPC subnets are public; keep simple for interview
-  tags                        = merge(var.tags, { Name = "${var.altium_dev}-db" })
+  tags                        = merge(var.tags, { Name = "${var.name_prefix}-db" })
 
+  user_data = <<-EOF
+    #!/bin/bash
+    set -euo pipefail
 
+    yum update -y
+    amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
+    yum install -y mariadb-server jq
+
+    systemctl enable mariadb
+    systemctl start mariadb
+
+    # Secure-ish setup
+    mysql -e "CREATE DATABASE IF NOT EXISTS appdb;"
+    mysql -e "CREATE USER IF NOT EXISTS '${local.db_user}'@'%' IDENTIFIED BY '${local.db_pass}';"
+    mysql -e "GRANT ALL PRIVILEGES ON appdb.* TO '${local.db_user}'@'%';"
+    mysql -e "FLUSH PRIVILEGES;"
+
+    # Bind to all interfaces so app can connect (SG restricts access)
+    sed -i 's/^bind-address.*/bind-address=0.0.0.0/' /etc/my.cnf || true
+    systemctl restart mariadb
+  EOF
 }

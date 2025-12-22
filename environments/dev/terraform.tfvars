@@ -1,2 +1,2 @@
-domain_name      = "app-dev.yourdomain.com"
-hosted_zone_name = "yourdomain.com"
+domain_name      = "app-dev.altium.com"
+hosted_zone_name = "altium.com"

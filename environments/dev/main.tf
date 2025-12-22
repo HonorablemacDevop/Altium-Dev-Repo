@@ -1,5 +1,5 @@
 locals {
-  altium_dev = "${var.project}-${var.env}"
+  name_prefix = "${var.project}-${var.env}"
   tags = {
     Project     = var.project
     Environment = var.env
@@ -9,13 +9,13 @@ locals {
 
 module "network" {
   source      = "../../modules/network"
-  altium_dev = local.altium_dev
+  name_prefix = local.name_prefix
   tags        = local.tags
 }
 
 module "route53_acm" {
   source           = "../../modules/route53_acm"
-  altium_dev      = local.altium_dev
+  name_prefix      = local.name_prefix
   tags             = local.tags
   hosted_zone_name = var.hosted_zone_name
   domain_name      = var.domain_name
@@ -23,13 +23,13 @@ module "route53_acm" {
 
 module "iam" {
   source      = "../../modules/iam"
-  altium_dev = local.altium_dev
+  name_prefix = local.name_prefix
   tags        = local.tags
 }
 
 module "alb" {
   source      = "../../modules/alb"
-  altium_dev = local.altium_dev
+  name_prefix = local.name_prefix
   tags        = local.tags
 
   vpc_id          = module.network.vpc_id
@@ -41,7 +41,7 @@ module "alb" {
 
 module "db" {
   source      = "../../modules/db_ec2"
-  altium_dev = local.altium_dev
+  name_prefix = local.name_prefix
   tags        = local.tags
 
   vpc_id              = module.network.vpc_id
@@ -54,7 +54,7 @@ module "db" {
 
 module "asg_app" {
   source      = "../../modules/asg_app"
-  altium_dev = local.altium_dev
+  name_prefix = local.name_prefix
   tags        = local.tags
 
   vpc_id               = module.network.vpc_id
@@ -74,7 +74,12 @@ module "asg_app" {
 }
 
 module "route53_record" {
-  source           = "../../modules/route53_acm" 
+  source           = "../../modules/route53_acm"
+  name_prefix      = local.name_prefix
+  tags = local.tags
+  domain_name = var.domain_name
+  hosted_zone_name = var.hosted_zone_name
+
 }
 
 data "aws_route53_zone" "zone" {

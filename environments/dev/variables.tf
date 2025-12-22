@@ -44,7 +44,7 @@ variable "db_port" {
 }
 
 variable "ssh_ingress_cidr" {
-  description =  "0.0.0.0/0"
+  description = "Optional: restrict SSH to your IP. Set to 0.0.0.0/0 only if required."
   type        = string
   default     = "0.0.0.0/0"
 }

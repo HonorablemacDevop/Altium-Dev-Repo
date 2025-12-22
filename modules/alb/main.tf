@@ -1,8 +1,8 @@
 resource "aws_security_group" "alb_sg" {
-  name        = "${var.altium_dev}-alb-sg"
+  name        = "${var.name_prefix}-alb-sg"
   description = "ALB SG: inbound 80/443 from world"
   vpc_id      = var.vpc_id
-  tags        = merge(var.tags, { Name = "${var.altium_dev}-alb-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-alb-sg" })
 
   # default outbound (allow all) implicitly; keeping explicit egress is optional in SGs
 }
@@ -28,10 +28,10 @@ resource "aws_security_group_rule" "alb_in_https" {
 }
 
 resource "aws_security_group" "app_sg" {
-  name        = "${var.altium_dev}-app-sg"
+  name        = "${var.name_prefix}-app-sg"
   description = "App instances: inbound from ALB only"
   vpc_id      = var.vpc_id
-  tags        = merge(var.tags, { Name = "${var.altium_dev}-app-sg" })
+  tags        = merge(var.tags, { Name = "${var.name_prefix}-app-sg" })
 }
 
 resource "aws_security_group_rule" "app_in_from_alb" {
@@ -45,16 +45,16 @@ resource "aws_security_group_rule" "app_in_from_alb" {
 }
 
 resource "aws_lb" "this" {
-  name               = substr(replace("${var.altium_dev}-alb", "/[^a-zA-Z0-9-]/", "-"), 0, 32)
+  name               = substr(replace("${var.name_prefix}-alb", "/[^a-zA-Z0-9-]/", "-"), 0, 32)
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
   subnets            = var.public_subnet_ids
-  tags               = merge(var.tags, { Name = "${var.altium_dev}-alb" })
+  tags               = merge(var.tags, { Name = "${var.name_prefix}-alb" })
 }
 
 resource "aws_lb_target_group" "app_tg" {
-  name     = substr(replace("${var.altium_dev}-tg", "/[^a-zA-Z0-9-]/", "-"), 0, 32)
+  name     = substr(replace("${var.name_prefix}-tg", "/[^a-zA-Z0-9-]/", "-"), 0, 32)
   port     = var.app_port
   protocol = "HTTP"
   vpc_id   = var.vpc_id
@@ -68,7 +68,7 @@ resource "aws_lb_target_group" "app_tg" {
     unhealthy_threshold = 3
   }
 
-  tags = merge(var.tags, { Name = "${var.altium_dev}-tg" })
+  tags = merge(var.tags, { Name = "${var.name_prefix}-tg" })
 }
 
 # HTTP listener -> redirect to HTTPS
