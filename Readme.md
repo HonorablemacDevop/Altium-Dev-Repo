@@ -1,5 +1,9 @@
 ## Altium AWS 3-tier (Default VPC) Terraform POC
 
+### POC Architecture diagram
+
+![POC architecture](altium-poc-diagram.png)
+
 ### What it creates
 - Default VPC + 3 default subnets (discovered)
 - ACM cert (DNS validated) + Route53 record
