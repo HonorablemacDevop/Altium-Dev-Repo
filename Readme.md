@@ -1,4 +1,4 @@
-## Altium AWS 3-tier (Default VPC) Terraform POC
+## AFroH AWS 3-tier (Default VPC) Terraform POC
 
 ### POC Architecture diagram
 
